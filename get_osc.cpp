@@ -10,10 +10,10 @@ static void handle_SIGINT(int unused) {
   run_flag = false;
 }
 
-static lo_address init(Pixy2 pixy) {
+static lo_address init(Pixy2 *pixy) {
   printf ("Connecting to Pixy2...\n");
-  if (pixy.init() != -1) {
-    pixy.changeProg("color_connected_components");
+  if (pixy->init() != -1) {
+    pixy->changeProg("color_connected_components");
     printf ("Connecting to OSC\n");
     const lo_address addr = lo_address_new_from_url(OSC_ADDRESS);
     if(addr) return addr;
@@ -22,10 +22,10 @@ static lo_address init(Pixy2 pixy) {
   exit(EXIT_FAILURE);
 }
 
-static bool get_blocks(Pixy2 pixy, const lo_address addr) {
-  const auto n= pixy.ccc.getBlocks();
+static bool get_blocks(Pixy2 *pixy, const lo_address addr) {
+  const auto n= pixy->ccc.getBlocks();
   for (uint8_t i = 0; i < n; ++i) {
-    const auto b = pixy.ccc.blocks[i];
+    const auto b = pixy->ccc.blocks[i];
     if (lo_send(addr, "block", "iiiiiii",
         b.m_x, b.m_y, b.m_width, b.m_height,
         b.m_signature, b.m_index, b.m_age) < 0)
@@ -39,9 +39,9 @@ int main(void) {
 
   Pixy2 pixy;
 
-  const lo_address addr = init(pixy);
+  const lo_address addr = init(&pixy);
 
-  while(run_flag) get_blocks(pixy, addr);
+  while(run_flag) get_blocks(&pixy, addr);
 
   lo_address_free(addr);
 
